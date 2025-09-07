@@ -1,41 +1,61 @@
-"use client"
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { z } from "zod";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "sonner";
+
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 
-import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import Image from "next/image"
 
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-})
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 
-const AuthForm = () => {
+
+import FormField from "./FormField";
+const authFormSchema = (type: FormType) => {
+  return z.object({
+    name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
+    email:z.email(),
+    password: z.string().min(3),
+  });
+};
+
+const AuthForm = ({type}:{type:FormType}) => {
+
+
+
+  
+  const formSchema = authFormSchema(type);
     const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
+      name: "",
+      email: "",
+      password: "",
     },
   })
  
-  // 2. Define a submit handler.
+  
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
+    try {
+      if(type==='sign-up'){
+        console.log('SIGN-UP',values);
+      }
+      else{
+        console.log('SIGN-IN',values)
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("There was some error:${error}")
+    }
   }
+
+const isSignIn = type === 'sign-in';
+
   return (
     <div className="flex justify-center items-center min-h-screen">
     <div className=" card-border lg:min-w-[566px]">
@@ -44,14 +64,43 @@ const AuthForm = () => {
             <Image src="/logo.svg" alt="logo" height={32} width={38} />
             <h2 className="text-primary-100">HirePath</h2>
         </div>
-         <h3>Practice job interviews with AI</h3>
+         <h3 className="text-center">Practice job interviews with AI</h3>
       
        <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full mt-4 form">
-        
-        <Button type="submit">Submit</Button>
+         {!isSignIn && (
+              <FormField
+                control={form.control}
+                name="name"
+                label="Name"
+                placeholder="Your Name"
+                type="text"
+              />
+            )}
+        <FormField
+              control={form.control}
+              name="email"
+              label="Email"
+              placeholder="Your email address"
+              type="email"
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              label="Password"
+              placeholder="Enter your password"
+              type="password"
+            />
+        <Button type="submit" className="btn">{isSignIn ? "sign-in":"Create an account"}</Button>
       </form>
     </Form>
+    <p className="text-center">
+        {isSignIn? "No account yet?": "Have an account already?"}
+        <Link href={isSignIn?"/sign-up":"/sign-in"} className="font-bold text-user-primary ml-1">
+          {isSignIn?"Sign-up":"Sign-in"}
+        </Link>
+    </p>
     </div>
     </div>
     </div>
